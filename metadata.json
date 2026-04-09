@@ -1,0 +1,5 @@
+{
+  "name": "WonderWin AI",
+  "description": "AI-powered football predictions using live match data and statistical analysis with Google Search grounding.",
+  "requestFramePermissions": []
+}
