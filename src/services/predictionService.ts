@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { format } from "date-fns";
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
 const ai = new GoogleGenAI({ apiKey });
@@ -15,54 +16,49 @@ export async function getPredictions(competition: string, date: string): Promise
     console.error("GEMINI_API_KEY is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
     return [];
   }
-  const prompt = `Find football matches for the ${competition} competition scheduled for the date: ${date}.
-For each match, provide a data-driven prediction based on statistical analysis (league position, form, H2H, injuries).
-Use Google Search to get the most up-to-date match data for that specific date.
-
-Strictly adhere to these rules:
-1. Base your prediction purely on statistical data.
-2. Provide a single predicted outcome: "Home Win", "Away Win", or "Draw".
-3. Assign a confidence score as an integer percentage.
-4. Provide a concise, two-sentence statistical justification.
-5. Return the response as a JSON array of objects.
-6. If no matches are found for ${competition} on ${date}, return an empty array [].
-
-JSON Schema:
-{
-  "match": "[Home Team] vs [Away Team]",
-  "prediction": "[Outcome]",
-  "confidence_score": [Integer],
-  "statistical_justification": "[Your 2-sentence explanation]"
-}`;
 
   try {
+    const naturalDate = format(new Date(date), "MMMM do, yyyy");
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: prompt,
+      contents: `Find and analyze football matches for the ${competition} scheduled on ${naturalDate}.`,
       config: {
+        systemInstruction: `You are a professional football statistician. 
+Your task is to find REAL scheduled football matches for a specific date and competition using Google Search.
+
+RULES:
+1. ALWAYS use Google Search to verify fixtures for the provided date and competition.
+2. If matches exist, provide a data-driven prediction (Home Win, Away Win, or Draw) based on form, H2H, and injuries.
+3. If NO matches are scheduled for that specific date and competition, return an empty array [].
+4. Return the results as a JSON array of objects.
+5. Confidence score must be an integer (0-100).
+6. Justification must be exactly two sentences.`,
         tools: [{ googleSearch: {} }],
         toolConfig: { includeServerSideToolInvocations: true },
-        temperature: 0.2, // Lower temperature for more consistent data extraction
+        temperature: 0.1,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              match: { type: Type.STRING, description: "Team A vs Team B" },
+              prediction: { type: Type.STRING, description: "Home Win, Away Win, or Draw" },
+              confidence_score: { type: Type.INTEGER },
+              statistical_justification: { type: Type.STRING }
+            },
+            required: ["match", "prediction", "confidence_score", "statistical_justification"]
+          }
+        }
       },
     });
 
     const text = response.text;
+    console.log(`AI Response for ${competition} on ${date}:`, text);
     if (!text) return [];
     
-    // Extract JSON from the response text (it might be wrapped in markdown or contain commentary)
-    let jsonStr = text;
-    const start = text.indexOf('[');
-    const end = text.lastIndexOf(']');
-    
-    if (start !== -1 && end !== -1 && end > start) {
-      jsonStr = text.substring(start, end + 1);
-    } else {
-      // Fallback: strip markdown code blocks if present
-      jsonStr = text.replace(/```json\n?|```/g, "").trim();
-    }
-    
     try {
-      return JSON.parse(jsonStr);
+      return JSON.parse(text);
     } catch (e) {
       console.error("Failed to parse JSON from response:", text);
       return [];

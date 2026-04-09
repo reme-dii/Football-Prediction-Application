@@ -208,6 +208,12 @@ export default function App() {
               <AnimatePresence mode="wait">
                 {loading ? (
                   <div className="space-y-6">
+                    <div className="flex items-center gap-3 mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-pulse">
+                      <Search className="w-4 h-4 text-emerald-500" />
+                      <p className="text-xs font-mono uppercase tracking-widest text-emerald-500">
+                        Searching for {selectedComp} fixtures on {format(date, "MMM do")}...
+                      </p>
+                    </div>
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="p-8 rounded-3xl bg-white/5 border border-white/10 space-y-4">
                         <div className="flex justify-between items-start">
