@@ -3,7 +3,7 @@ import { Trophy, TrendingUp, Calendar as CalendarIcon, AlertCircle, Search, Acti
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 import { getPredictions, Prediction } from "@/src/services/predictionService";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -116,18 +116,16 @@ export default function App() {
 
                 <div className="px-3 pb-2">
                   <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-emerald-500" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                        <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
+                    <PopoverTrigger
+                      className={cn(
+                        buttonVariants({ variant: "outline" }),
+                        "w-full justify-start text-left font-normal bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-emerald-500" />
+                      {date ? format(date, "PPP") : <span>Pick a date</span>}
+                      <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="start">
                       <Calendar

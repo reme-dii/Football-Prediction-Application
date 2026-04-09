@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
+const ai = new GoogleGenAI({ apiKey });
 
 export interface Prediction {
   match: string;
@@ -10,6 +11,10 @@ export interface Prediction {
 }
 
 export async function getPredictions(competition: string, date: string): Promise<Prediction[]> {
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
+    return [];
+  }
   const prompt = `Find football matches for the ${competition} competition scheduled for the date: ${date}.
 For each match, provide a data-driven prediction based on statistical analysis (league position, form, H2H, injuries).
 Use Google Search to get the most up-to-date match data for that specific date.
